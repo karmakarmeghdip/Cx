@@ -1,0 +1,19 @@
+# Cx language definition. `grammar = "cx"` refers to the [grammars.cx]
+# entry in the extension root extension.toml (minimal total-parse grammar
+# under grammars/cx). Deep highlighting comes from the Cx LSP via
+# semantic tokens (set "Cx" -> semantic_tokens "full" in Zed settings).
+name = "Cx"
+grammar = "cx"
+path_suffixes = ["cx"]
+line_comments = ["// "]
+tab_size = 4
+hard_tabs = false
+increase_indent_pattern = '\{\s*$'
+decrease_indent_pattern = '^\s*\}\s*;?\s*$'
+
+brackets = [
+  { start = "{", end = "}", close = true, newline = true, not_in = ["string", "comment"] },
+  { start = "(", end = ")", close = true, newline = true, not_in = ["string", "comment"] },
+  { start = "[", end = "]", close = true, newline = true, not_in = ["string", "comment"] },
+  { start = "\"", end = "\"", close = true, newline = false, not_in = ["string", "comment"] },
+]

@@ -105,6 +105,55 @@ return function(ctx)
         assert(#ast.collect_ext(out) == 0, "no Ext may remain")
     end)
 
+    ctx.check("expand: chained extensions interoperate across rounds", function()
+        -- A emits a FRESH Ext:T:B child mid-round; the next round's
+        -- collection must discover and expand it (no special casing).
+        local expanders = {
+            ["Ext:T:A"] = function(_, node)
+                return ast.node("Cx:Block", node.loc, { items = {
+                    ast.node("Ext:T:B", node.loc, {}),
+                } })
+            end,
+            ["Ext:T:B"] = function(_, node)
+                return ast.node("Cx:Directive", node.loc, { text = "#b" })
+            end,
+        }
+        local root = ast.translation_unit(loc(1), { leaf("Ext:T:A") })
+        local out, passes = expand.expand(root, expanders, { target = {}, dialect = {} })
+        assert(passes == 2, "chain needs two expansions, got " .. passes)
+        assert(#ast.collect_ext(out) == 0, "fresh Ext:B must be expanded")
+        assert(out.body[1].kind == "Cx:Block", "A output kept")
+        assert(out.body[1].items[1].kind == "Cx:Directive", "B output filled in")
+    end)
+
+    ctx.check("expand: sibling list splices keep order", function()
+        -- One-to-many splices shift pending siblings; order and
+        -- completeness must survive (exercises shift tracking).
+        local expanders = {
+            ["Ext:T:S"] = function(_, node)
+                local tag = "#L" .. node.loc.line
+                return {
+                    ast.node("Cx:Directive", node.loc, { text = tag .. "a" }),
+                    ast.node("Cx:Directive", node.loc, { text = tag .. "b" }),
+                }
+            end,
+        }
+        local root = ast.translation_unit(loc(1), {
+            ast.node("Ext:T:S", loc(1), {}),
+            ast.node("Ext:T:S", loc(2), {}),
+            ast.node("Ext:T:S", loc(3), {}),
+        })
+        local out, passes = expand.expand(root, expanders, { target = {}, dialect = {} })
+        assert(passes == 3, "three expansions, got " .. passes)
+        assert(#out.body == 6, "each sibling doubles, got " .. #out.body)
+        local texts = {}
+        for _, d in ipairs(out.body) do
+            texts[#texts + 1] = d.text
+        end
+        assert(table.concat(texts, ",") == "#L1a,#L1b,#L2a,#L2b,#L3a,#L3b",
+            "order wrong: " .. table.concat(texts, ","))
+    end)
+
     ctx.check("expand: budget exhaustion names kind+loc", function()
         local expanders = {
             ["Ext:T:Loop"] = function(_, node)

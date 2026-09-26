@@ -260,8 +260,13 @@ function M.link_graph(graph, api)
     for _, path in ipairs(graph.order) do
         export_of[path] = api.exports_of(graph.units[path].root, path)
     end
+    -- One linear body rebuild per TU: import edges become their prototypes
+    -- (types stably first so uses never precede typedefs), export markers
+    -- unwrap to their declarations. No per-node parent research: markers
+    -- are direct body members by contract.
     for _, path in ipairs(graph.order) do
         local unit = graph.units[path]
+        local splice = {} ---@type table<table, table[]> marker node -> replacements
         for _, edge in ipairs(api.imports_of(unit.root)) do
             local target = M.resolve(path, edge.path)
             local tunit = graph.units[target]
@@ -301,21 +306,25 @@ function M.link_graph(graph, api)
                 end
                 protos = types_first
             end
-            ast.replace({ root = unit.root }, edge.node, protos)
+            splice[edge.node] = protos
         end
-    end
-    for _, path in ipairs(graph.order) do
-        local unit = graph.units[path]
-        local seen = {}
-        local unwraps = {}
-        for _, entry in pairs(api.exports_of(unit.root, path)) do
-            if not seen[entry.node] then
-                seen[entry.node] = true
-                unwraps[#unwraps + 1] = entry
+        for _, entry in pairs(export_of[path]) do
+            splice[entry.node] = { entry.decl }
+        end
+        local body, changed = {}, false
+        for _, node in ipairs(unit.root.body) do
+            local repl = splice[node]
+            if repl ~= nil then
+                changed = true
+                for _, r in ipairs(repl) do
+                    body[#body + 1] = r
+                end
+            else
+                body[#body + 1] = node
             end
         end
-        for _, entry in ipairs(unwraps) do
-            ast.replace({ root = unit.root }, entry.node, { entry.decl })
+        if changed then
+            unit.root.body = body
         end
     end
     for _, path in ipairs(graph.order) do

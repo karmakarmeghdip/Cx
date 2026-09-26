@@ -1,0 +1,17 @@
+# Cx language support for Zed (local dev extension).
+# Install via: command palette -> "zed: install dev extension" -> select editors/zed.
+# NOTE: the file:// grammar URL below is machine-local. If you move this
+# checkout, update it to the new absolute path of grammars/cx.
+id = "cx"
+name = "Cx"
+version = "0.1.0"
+schema_version = 1
+description = "Cx language support: C-like highlighting plus the Cx LSP (diagnostics, semantic tokens, cross-file navigation)"
+authors = ["Cx contributors"]
+
+[grammars.cx]
+repository = "file:///home/meghdip/Projects/Cx/editors/zed/grammars/cx"
+
+[language_servers.cx-lsp]
+name = "Cx LSP"
+languages = ["Cx"]

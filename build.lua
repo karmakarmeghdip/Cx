@@ -24,6 +24,7 @@ Tasks:
   emit            emit samples/programs/01_hello_args.cx to out/01.c
   build           emit+compile+link the strict samples (01-06) to out/<stem>
   run <stem>      build (if needed) and execute one sample, forwarding args
+  lsp             start the Cx language server on stdio (editor-agnostic)
   clean           remove the out/ tree
 
 Flags:
@@ -178,6 +179,11 @@ if task == "run" then
     end
     local _, code = buildkit.exec(pargs)
     os.exit(code or 0)
+end
+
+if task == "lsp" then
+    require("compiler.lsp.server").run()
+    return
 end
 
 if task == "clean" then
