@@ -11,6 +11,7 @@ authors = ["Cx contributors"]
 
 [grammars.cx]
 repository = "file:///home/meghdip/Projects/Cx/editors/zed/grammars/cx"
+rev = "3d639ff1325b63be20e44b07bcaa7accc7a3c154"
 
 [language_servers.cx-lsp]
 name = "Cx LSP"
