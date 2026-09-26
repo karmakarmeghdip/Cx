@@ -1,0 +1,1 @@
+Snapshots are generated via `luajit tests/run.lua --bless` (reviewed copies of samples/programs/*.c until P4 codegen lands).

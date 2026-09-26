@@ -1,0 +1,584 @@
+/*
+ * ISO C23 syntax reference in Cx. Preprocessor directives are shared with C;
+ * declarations, casts, type aliases, and function definitions use Cx syntax.
+ */
+
+#include <complex.h>
+#include <fenv.h>
+#include <iso646.h>
+#include <stdalign.h>
+#include <stdarg.h>
+#include <stdatomic.h>
+#include <stdbool.h>
+#include <stdckdint.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <threads.h>
+#include <uchar.h>
+
+/* Preprocessor forms */
+#define EMPTY
+#define WIDTH 4
+#define IDENTITY(value) (value)
+#define STRINGIZE(value) #value
+#define JOIN_INNER(left, right) left##right
+#define JOIN(left, right) JOIN_INNER(left, right)
+#define DIGRAPH_JOIN(left, right) left %:%: right
+#define SUM(first, ...) ((first) __VA_OPT__(+ __VA_ARGS__))
+#define MULTILINE(first, second) \
+    ((first) + (second))
+
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+#define DIALECT 202311L
+#elifdef WIDTH
+#define DIALECT 1
+#elifndef WIDTH
+#define DIALECT 0
+#else
+#define DIALECT -1
+#endif
+
+#ifdef WIDTH
+#define WIDTH_IS_DEFINED 1
+#endif
+
+#ifndef MISSING
+#define MISSING 0
+#endif
+
+#undef EMPTY
+#define REDEFINED 1
+
+#if defined(__has_include)
+#if __has_include(<stdio.h>)
+#define HAS_STDIO 1
+#endif
+#endif
+
+#if defined(__has_c_attribute)
+#if __has_c_attribute(deprecated)
+#define HAS_DEPRECATED 1
+#endif
+#endif
+
+#pragma STDC FP_CONTRACT ON
+
+#if defined(FENV_ROUND) && defined(FENV_DEC_ROUND)
+#define HAS_FENV_ROUND_MACROS 1
+#endif
+
+#if 0
+#warning disabled warning-directive example
+#error disabled error-directive example
+#endif
+
+#if __has_embed("embed.txt")
+static const embedded_bytes: const unsigned char[] = cinit {
+#embed "embed.txt" limit(5)
+};
+#endif
+
+/* Lexical forms */
+static const decimal_integer: int = 1'000'000;
+static const octal_integer: int = 0755;
+static const binary_integer: int = 0b1010'0101;
+static const alternative_tokens: int = 1 && 2;
+static const suffixed_integer: unsigned long long = 42uwb;
+static const wide_suffix: int = 42L;
+static const unsigned_suffix: unsigned int = 42U;
+static const long_long_suffix: unsigned long long = 42ULL;
+static const single_suffix: float = 1.0f;
+static const no_suffix: double = 1.0;
+static const long_suffix: long double = 1.0L;
+static const hexadecimal_float: double = 0x1.fp+3;
+static const newline: char = '\n';
+static const escaped: char[] = ['\0', '\a', '\b', '\t', '\v', '\f', '\r', '\\', '\"', '\?'];
+static const octal_escape: unsigned char = '\101';
+static const hexadecimal_escape: unsigned char = '\x41';
+static const implementation_defined_multicharacter: int = 'AB';
+static const utf8_character: char8_t = u8'A';
+static const utf16_character: char16_t = u'B';
+static const utf32_character: char32_t = U'C';
+static const wide_character: wchar_t = L'D';
+static const narrow_text: char[] = "abc" "def";
+static const utf8_text: char8_t[] = u8"é";
+static const utf16_text: char16_t[] = u"π";
+static const utf32_text: char32_t[] = U"😀";
+static const wide_text: wchar_t[] = L"wide";
+static const Ångstrom: int = 1;
+static const \u00C5ngstromAlias: int = 2;
+static let null_pointer: void* const volatile = NULL;
+#line 120 "preprocessed_syntax_reference.cx"
+
+struct incomplete;
+union incomplete_union;
+
+/* Basic types, qualifiers, and storage classes */
+static const qualified_integer: volatile int = 1;
+static let @let: int = 1;
+static let @function: int = 2;
+static let @type: int = 3;
+static let @as: int = 4;
+static let @cinit: int = 5;
+static let const_pointer: int* const = NULL;
+let pointer_to_volatile_constant: const int* volatile = NULL;
+let restrict_pointer: int* restrict = NULL;
+static let atomic_by_constructor: _Atomic(int);
+static let atomic_integer: _Atomic int;
+static let volatile_integer: volatile int;
+static let integer_alias: int = 1;
+type IntegerAlias = int;
+static let typedef_integer: IntegerAlias = 2;
+static const constant_expression_array: int[WIDTH];
+constexpr let constexpr_integer: int = 40 + 2;
+static thread_local let thread_integer: int = 3;
+static let inferred_integer: int = 4;
+static let pointer_integer: int* = &inferred_integer;
+static let pointer_pointer_integer: int** = &pointer_integer;
+static let fixed_array: int[4];
+static let inferred_array: int[] = [1, 2, 3];
+extern let incomplete_array: int[];
+static let matrix: int[2][3];
+static let array_of_pointers: int*[4];
+static let pointer_to_array: int[4]*;
+static let function_pointer: ((int, char*) => int)*;
+static function returns_pointer(selector: int): int*;
+static function returns_array_pointer(): int[4]*;
+static let array_of_function_pointers: ((int) => int)*[3];
+static function takes_callback(callback: ((int) => void)*): ((int) => void)*;
+static let boolean_value: bool = true;
+static let false_value: bool = false;
+static let bit_int: int = 42wb;
+static let unsigned_bit_int: unsigned _BitInt(37) = 42uwb;
+static let copied_type: typeof(inferred_integer) = 5;
+static let unqualified_type: typeof_unqual(const int) = 6;
+static let complex_value: double _Complex = 1.0;
+static let imaginary_complex_value: float _Complex = 2.0f;
+static let long_double_value: long double = 1.0L;
+static let null_typed_value: nullptr_t = nullptr;
+static let pointer_size_difference: ptrdiff_t = sizeof(int*);
+static let object_size: size_t = sizeof(struct incomplete*);
+static alignas(16) let aligned_integer: int = 7;
+static _Alignas(double) let alignment_bytes: char[8];
+
+#if defined(__STDC_IEC_60559_DFP__)
+static let decimal32_value: _Decimal32 = 1.0df;
+static let decimal64_value: _Decimal64 = 1.0dd;
+static let decimal128_value: _Decimal128 = 1.0dl;
+#endif
+
+static function checked_add(left: int, right: int): int
+{
+    let result: int;
+    return ckd_add(&result, left, right) ? -1 : result;
+}
+
+static function unreachable_value(value: int): int
+{
+    if (value < 0) {
+        unreachable();
+    }
+    return value;
+}
+
+/* Enumerations */
+enum color : unsigned char;
+enum color : unsigned char {
+    COLOR_RED,
+    COLOR_GREEN = 10,
+    COLOR_BLUE,
+};
+
+enum flags {
+    FLAG_NONE [[deprecated]] = 0,
+    FLAG_READ = 1 << 0,
+    FLAG_WRITE = 1 << 1,
+    FLAG_ALL = FLAG_READ | FLAG_WRITE,
+};
+
+enum large_enum {
+    LARGE_ENUM_VALUE = 0x100000000LL,
+};
+
+/* Structures, unions, bit-fields, and anonymous members */
+struct point {
+    x: int;
+    y: int;
+};
+
+struct bits {
+    low: unsigned int: 3;
+    : 0;
+    high: signed int: 5;
+    ignored: unsigned int: 2;
+};
+
+struct nested {
+    static_assert(WIDTH == 4);
+    struct {
+        left: int;
+        right: int;
+    };
+    union {
+        integer: int;
+        real: float;
+    };
+    tail: int;
+};
+
+struct buffer {
+    length: size_t;
+    bytes: unsigned char[];
+};
+
+struct node {
+    value: int;
+    next: struct node*;
+};
+
+struct containing_record {
+    point: struct point;
+    tag: int;
+};
+
+struct attributed_record {
+    [[maybe_unused]] before: int;
+    after: int [[maybe_unused]];
+};
+
+union scalar {
+    integer: int;
+    real: float;
+};
+
+static let initialized_point: struct point = {y: 2, x: 1};
+static let initialized_nested: struct nested = {left: 3, integer: 4, tail: 5};
+static let initialized_union: union scalar = {real: 1.5f};
+static let designated_array: int[8] = cinit {[7] = 7, [2] = 2, [4] = 4};
+static let nested_designator: int[2][3] = cinit {[1][2] = 9};
+static let empty_initializers: int[4] = [];
+static let empty_point: struct point = {};
+static const character_array: char[4] = ['C', 'x'];
+static const string_array: char[] = "Cx";
+static let compound_pointer: const struct point* = &(const struct point){x: 8, y: 9};
+static let compound_array: const int* = (const int[])[1, 2, 3];
+
+/* Function declarations */
+[[nodiscard]] function checked_value(value: int): int;
+function unnamed_parameters(int, char*): int;
+[[deprecated("use checked_value")]] static function function_with_attributes(value: int): int;
+function variadic_only(...): void;
+function empty_parameter_prototype(): int;
+static _Noreturn function terminate_now(): void;
+static function pointer_parameter(values: int*, count: size_t): int;
+static function qualified_pointer_parameter(values: const int* restrict, count: size_t): int;
+static function array_parameter(values: int[WIDTH]): int;
+static function qualified_array_parameter(values: int[const WIDTH]): int;
+static function static_array_parameter(values: int[static WIDTH]): int;
+static function variable_array_parameter(count: int, values: int[count]): size_t;
+function star_array_parameter(count: int, values: int[*]): size_t;
+static function matrix_parameter(count: int, values: int[count][3]): int;
+static function apply_operation(left: int, right: int, operation: ((int, int) => int)*): int;
+static function generic_identity(value: const int*): int;
+static function collect_varargs(count: int, ...): size_t;
+
+/* Definitions */
+[[nodiscard]] function checked_value(value: int): int
+{
+    return value < 0 ? -value : value;
+}
+
+function unnamed_parameters(int, char*): int
+{
+    return 0;
+}
+
+function variadic_only(...): void {}
+
+static function function_with_attributes(value: int): int
+{
+    return value;
+}
+
+static _Noreturn function terminate_now(): void
+{
+    exit(1);
+}
+
+static function returns_pointer(selector: int): int*
+{
+    static let first: int;
+    static let second: int;
+    return selector ? &first : &second;
+}
+
+static function returns_array_pointer(): int[4]*
+{
+    static let array: int[2][4];
+    return array;
+}
+
+static function callback_body(value: int): void
+{
+    value as void;
+}
+
+static function takes_callback(callback: ((int) => void)*): ((int) => void)*
+{
+    return callback;
+}
+
+static function add(left: int, right: int): int
+{
+    return left + right;
+}
+
+static function pointer_parameter(values: int*, count: size_t): int
+{
+    let total: int = 0;
+    while (count-- != 0) {
+        total += *values++;
+    }
+    return total;
+}
+
+static function qualified_pointer_parameter(values: const int* restrict, count: size_t): int
+{
+    return count == 0 ? 0 : values[0];
+}
+
+static function array_parameter(values: int[WIDTH]): int
+{
+    return values[WIDTH - 1];
+}
+
+static function qualified_array_parameter(values: int[const WIDTH]): int
+{
+    return values[0];
+}
+
+static function static_array_parameter(values: int[static WIDTH]): int
+{
+    return values[0];
+}
+
+static function variable_array_parameter(count: int, values: int[count]): size_t
+{
+    values as void;
+    return count as size_t;
+}
+
+static function matrix_parameter(count: int, values: int[count][3]): int
+{
+    let total: int = 0;
+    for (let row: int = 0; row < count; ++row) {
+        total += values[row][2];
+    }
+    return total;
+}
+
+static function apply_operation(left: int, right: int, operation: ((int, int) => int)*): int
+{
+    return operation(left, right);
+}
+
+static function generic_identity(value: const int*): int
+{
+    return _Generic(value,
+        int*: 1,
+        const int*: 2,
+        default: 0);
+}
+
+static function collect_varargs(count: int, ...): size_t
+{
+    let arguments: va_list;
+    va_start(arguments, count);
+    let total: int = 0;
+    for (let index: int = 0; index < count; ++index) {
+        total += va_arg(arguments, int);
+    }
+    va_end(arguments);
+    return total as size_t;
+}
+
+static function c23_varargs(first: int, ...): int
+{
+    let arguments: va_list;
+    va_start(arguments);
+    let second: int = va_arg(arguments, int);
+    va_end(arguments);
+    return first + second;
+}
+
+static function static_compound_literal(): int*
+{
+    static let values: int[] = [3, 4];
+    return values;
+}
+
+static function statement_expressions(seed: int): void
+{
+    let value: int = seed;
+
+    if (value < 0) {
+        value = -value;
+    } else if (value == 0) {
+        value = 1;
+    } else {
+        value--;
+    }
+
+    switch (value % 3) {
+    case 0:
+        value += 3;
+        break;
+    case 1:
+        value -= 1;
+        [[fallthrough]];
+    case 2:
+        value *= 2;
+        break;
+    default:
+        value = 0;
+    }
+
+    while (value < 10) {
+        ++value;
+    }
+
+    do {
+        --value;
+    } while (value > 0);
+
+    for (let index: int = 0; index < 3; ++index) {
+        if (index == 1) {
+            continue;
+        }
+        value += index;
+    }
+
+    for (;;) {
+        break;
+    }
+
+    if (value == 0) {
+        goto done;
+    }
+
+done:
+    ;
+}
+
+static function c23_label_placement(value: int): int
+{
+    goto negative;
+
+negative:
+    let result: int = -value;
+    if (result > 10) {
+        goto finished;
+    }
+    ++result;
+
+finished:
+    return result;
+}
+
+static function empty_label_at_block_end(): void
+{
+    goto finished;
+finished:
+}
+
+/* Expression productions */
+static function expression_productions(): void
+{
+    let values: int[WIDTH] = [1, 2, 3, 4];
+    let pointer: int* = values;
+    let pointer_to_pointer: int** = &pointer;
+    let array_pointer: int[WIDTH]* = &values;
+    let pointer_element: int = values[2];
+    let function_pointer_value: ((int, char*) => int)* = NULL;
+    let text: const char* = "Cx";
+    let before_increment: int = pointer_element++;
+    let after_increment: int = ++pointer_element;
+    let negative: int = -before_increment;
+    let positive: int = +negative;
+    let logical_not: int = !after_increment;
+    let bit_not: int = ~after_increment;
+    let distance: ptrdiff_t = pointer + WIDTH - pointer;
+    let comparison: bool = 0 < after_increment && after_increment <= WIDTH;
+    let bit_value: int = (0x0f & 0x33) | (0x10 ^ 0x01);
+    bit_value <<= 1;
+    bit_value >>= 1;
+    let conditional: int = comparison ? bit_value : 0;
+    let comma: int = (conditional++, conditional + 1);
+    let type_size: size_t = sizeof(struct point);
+    let expression_size: size_t = sizeof(values);
+    let unevaluated_size: size_t = sizeof(pointer_element);
+    let alignment: size_t = alignof(max_align_t);
+    let old_alignment: size_t = alignof(long double);
+    let null_value: void* = nullptr;
+    let literal: struct point = (struct point){x: 1, y: 2};
+    let generic: int = _Generic(pointer_element, int*: 1, default: 0);
+
+    atomic_fetch_add(&atomic_integer, 1);
+    atomic_store(&atomic_by_constructor, 2);
+    let atomic_value: int = atomic_load(&atomic_by_constructor);
+
+    pointer_to_pointer as void;
+    array_pointer as void;
+    function_pointer_value as void;
+    text as void;
+    positive as void;
+    logical_not as void;
+    bit_not as void;
+    distance as void;
+    comma as void;
+    unevaluated_size as void;
+    old_alignment as void;
+    null_value as void;
+    literal as void;
+    generic as void;
+    atomic_value as void;
+    alignment as void;
+    type_size as void;
+    expression_size as void;
+}
+
+function main(): int
+{
+    static_assert(sizeof(int) >= 2);
+    static_assert(WIDTH > 0, "width must be positive");
+
+    constexpr let local_limit: int = 10;
+    let inferred = local_limit + 1;
+    let local: int = inferred;
+    let matrix: int[local_limit][2];
+    matrix[0][0] = 42;
+
+    let operation: int = apply_operation(20, 22, add);
+    let collected: int = collect_varargs(3, 1, 2, 3) as int;
+    let returned_array: int[4]* = returns_array_pointer();
+    takes_callback(callback_body)(7);
+
+    atomic_init(&atomic_integer, 0);
+    statement_expressions(inferred);
+    expression_productions();
+
+    printf("%d %d %d %d %d %d %s %s\n",
+           operation,
+           collected,
+           returned_array[0][0],
+           c23_label_placement(-12),
+           local,
+           matrix[0][0],
+           __func__,
+           STRINGIZE(Cx));
+
+    return EXIT_SUCCESS;
+}

@@ -1,0 +1,13 @@
+#include <stdio.h>
+
+import { Vec, vec_sum, vec_scale, MOD } from "./08_modules_vec.cx";
+
+function main(): int
+{
+    let values: int[4] = [3, 1, 4, 1];
+    let v: Vec = {len: 4, items: values};
+    printf("sum=%d mod=%d\n", vec_sum(&v), MOD);
+    vec_scale(&v, 10);
+    printf("sum=%d\n", vec_sum(&v));
+    return 0;
+}

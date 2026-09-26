@@ -1,0 +1,16 @@
+#include <stdio.h>
+
+static function greet(name: const char*): void
+{
+    printf("Hello, %s!\n", name);
+}
+
+function main(argc: int, argv: char**): int
+{
+    let name: const char* = argc > 1 ? argv[1] : "world";
+    let initial: char = name[0];
+
+    greet(name);
+    printf("First character: %c\n", initial);
+    return 0;
+}

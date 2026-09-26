@@ -1,0 +1,83 @@
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static function sum(count: size_t, values: const int*): int
+{
+    let total: int = 0;
+    for (let index: size_t = 0; index < count; ++index) {
+        total += values[index];
+    }
+    return total;
+}
+
+static function reverse(values: int*, count: size_t): void
+{
+    if (count < 2) {
+        return;
+    }
+    for (let left: size_t = 0, right: size_t = count - 1; left < right; ++left, --right) {
+        let temporary: int = values[left];
+        values[left] = values[right];
+        values[right] = temporary;
+    }
+}
+
+static function fill_row(row: int[restrict static 3], start: int): void
+{
+    for (let index: size_t = 0; index < 3; ++index) {
+        row[index] = start + (index as int);
+    }
+}
+
+function main(): int
+{
+    let vector: int[5] = [5, 1, 4, 2, 3];
+    let inferred: int[] = [9, 8, 7];
+    let matrix: int[2][3] = [[1, 2, 3], [4, 5, 6]];
+    let variable_size: size_t = 4;
+    let variable_length: int[variable_size];
+    let text: char[] = "variably modified";
+    let copy: char[sizeof(text)];
+
+    for (let index: size_t = 0; index < variable_size; ++index) {
+        variable_length[index] = (index as int) * index;
+    }
+    memcpy(copy, text, sizeof(text));
+
+    let before: int = sum(sizeof(vector) / sizeof(vector[0]), vector);
+    reverse(vector, sizeof(vector) / sizeof(vector[0]));
+    let after: int = sum(sizeof(vector) / sizeof(vector[0]), vector);
+    fill_row(matrix[1], 10);
+
+    let heap: int* = calloc(6, sizeof(*heap));
+    if (heap == NULL) {
+        return 1;
+    }
+    for (let index: size_t = 0; index < 6; ++index) {
+        heap[index] = 6 - (index as int);
+    }
+    let grown: int* = realloc(heap, 8 * sizeof(*heap));
+    if (grown == NULL) {
+        free(heap);
+        return 1;
+    }
+    heap = grown;
+    heap[6] = 0;
+    heap[7] = 7;
+
+    let last: int* = heap + 7;
+    let distance: ptrdiff_t = last - heap;
+
+    printf("vector: %d -> %d\n", before, after);
+    printf("inferred: %d %d %d\n", inferred[0], inferred[1], inferred[2]);
+    printf("matrix: %d %d %d\n", matrix[0][0], matrix[1][0], matrix[1][2]);
+    printf("vla: %zu %zu %d\n", sizeof(variable_length),
+           sizeof(variable_length) / sizeof(variable_length[0]), variable_length[3]);
+    printf("text: %s / %s\n", text, copy);
+    printf("heap: %d %d distance=%td\n", heap[0], *last, distance);
+
+    free(heap);
+    return 0;
+}

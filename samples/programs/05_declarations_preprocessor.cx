@@ -1,0 +1,98 @@
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#define PROGRAM_NAME "Cx declarations"
+#define JOIN_INNER(left, right) left##right
+#define JOIN(left, right) JOIN_INNER(left, right)
+#define STRINGIZE(value) #value
+#define PICK(condition, when_true, when_false) \
+    ((condition) ? (when_true) : (when_false))
+#define LOG(format, ...) printf(format __VA_OPT__(,) __VA_ARGS__)
+
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 202311L
+#define DIALECT 23
+#elif defined(__STDC_VERSION__)
+#define DIALECT 1
+#else
+#define DIALECT 0
+#endif
+
+#ifndef WIDTH
+#define WIDTH 8
+#elifdef WIDTH
+#define WIDTH_IS_DEFINED 1
+#elifndef WIDTH
+#define WIDTH_IS_UNDEFINED 1
+#endif
+
+#define JOINED JOIN(sample, name)
+#define TEXT STRINGIZE(Cx)
+
+static let global_counter: int = 3;
+extern let external_counter: int;
+let external_counter: int;
+
+static function global_state(): int
+{
+    static let calls: int;
+    let step: int = 2;
+    ++calls;
+    return calls * step;
+}
+
+static inline function square(value: int): int
+{
+    return value * value;
+}
+
+[[nodiscard]] static function checked_value(value: int): int
+{
+    return value < 0 ? -value : value;
+}
+
+[[maybe_unused]] static _Noreturn function fail(message: const char*): void
+{
+    fputs(message, stderr);
+    exit(1);
+}
+
+static function type_id(value: int): int
+{
+    return _Generic(value,
+        int: 1,
+        long: 2,
+        double: 3,
+        default: 0
+    );
+}
+
+static_assert(sizeof(int) >= 2, "int must hold at least 16 bits");
+alignas(16) static let aligned_counter: int [[maybe_unused]];
+thread_local let per_thread_counter: int;
+constexpr let constant_limit: int = WIDTH * 2;
+let observable_counter: volatile int;
+let restricted_pointer: int* restrict;
+
+function main(): int
+{
+    let inferred = 40 + 2;
+    const local_constant: int = WIDTH;
+    let local_pointer: int* restrict = &external_counter;
+    alignas(2 * sizeof(int)) let aligned_bytes: char[8] = [];
+
+    *local_pointer = square(inferred);
+    ++global_counter;
+    ++observable_counter;
+
+    LOG("%s: %d %d %d\n", PROGRAM_NAME, global_counter, external_counter, DIALECT);
+    LOG("%s, width=%d, constant=%d, state=%d\n", TEXT, local_constant, constant_limit, global_state());
+    printf("generic=%d checked=%d aligned=%zu thread=%d\n",
+           type_id(inferred), checked_value(-3), alignof(max_align_t),
+           per_thread_counter);
+
+    if (aligned_bytes[0] == '\0' && aligned_bytes[7] == '\0') {
+        puts("alignment storage is writable");
+    }
+    return 0;
+}

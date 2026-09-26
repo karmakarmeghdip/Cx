@@ -1,0 +1,25 @@
+// Shared vector helpers (exported for 08_modules_main.cx).
+// Imported as prototypes; bodies compile once from this file.
+
+export type Vec = struct {
+    len: int;
+    items: int*;
+};
+
+export const MOD: int = 1000;
+
+export function vec_sum(v: Vec*): int
+{
+    let total: int = 0;
+    for (let i: int = 0; i < v->len; ++i) {
+        total += v->items[i];
+    }
+    return total;
+}
+
+export function vec_scale(v: Vec*, factor: int): void
+{
+    for (let i: int = 0; i < v->len; ++i) {
+        v->items[i] = (v->items[i] * factor) % MOD;
+    }
+}

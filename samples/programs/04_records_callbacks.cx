@@ -1,0 +1,82 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+enum color {COLOR_RED, COLOR_GREEN, COLOR_BLUE};
+
+struct point {
+    x: int;
+    y: int;
+};
+
+union scalar {
+    integer: int;
+    real: float;
+};
+
+struct node {
+    value: int;
+    next: struct node*;
+};
+
+type Node = struct node;
+type Point = struct point;
+type Scalar = union scalar;
+type binary_operation = ((int, int) => int)*;
+
+static function add(left: int, right: int): int
+{
+    return left + right;
+}
+
+static function multiply(left: int, right: int): int
+{
+    return left * right;
+}
+
+static function apply(left: int, right: int, operation: binary_operation): int
+{
+    return operation(left, right);
+}
+
+static function squared_distance(point: Point): int
+{
+    return point.x * point.x + point.y * point.y;
+}
+
+static function translate(point: Point*, dx: int, dy: int): void
+{
+    point->x += dx;
+    point->y += dy;
+}
+
+function main(): int
+{
+    let point: Point = {x: 3, y: 4};
+    let copy: Point = (Point){x: -2, y: 7};
+    let value: Scalar = {real: 1.5f};
+    let tail: Node = {value: 2, next: NULL};
+    let head: Node = {value: 1, next: &tail};
+    let operation: binary_operation = point.x > copy.x ? add : multiply;
+
+    translate(&point, 2, -1);
+
+    printf("point: (%d, %d), distance²=%d\n",
+           point.x, point.y, squared_distance(point));
+    printf("copy: (%d, %d), operation=%d\n",
+           copy.x, copy.y, apply(6, 7, operation));
+    printf("union: %.1f\n", value.real);
+    printf("list: %d -> %d\n", head.value, head.next->value);
+
+    switch (point.x as enum color) {
+    case COLOR_RED:
+        puts("red");
+        break;
+    case COLOR_GREEN:
+        puts("green");
+        break;
+    case COLOR_BLUE:
+        puts("blue");
+        break;
+    }
+    return 0;
+}

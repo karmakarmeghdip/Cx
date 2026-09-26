@@ -1,0 +1,204 @@
+/*
+ * Common GNU C extensions expressed through Cx. The Cx transpiler would
+ * preserve these forms in GNU mode and diagnose them in strict ISO mode.
+ */
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#define GNU_LOG(format, ...) printf(format, ##__VA_ARGS__)
+#define COUNTER_VALUE __COUNTER__
+#define OLD_STYLE_FIELD(value) { .x = value }
+
+struct empty {};
+
+struct range_initializer {
+    values: int[8];
+};
+
+union converted {
+    integer: int;
+    real: float;
+};
+
+struct point {
+    x: int;
+    y: int;
+};
+
+struct packed_record {
+    first: int;
+    second: int;
+} __attribute__((packed));
+
+struct aligned_record {
+    value: int;
+} __attribute__((aligned(16)));
+
+type vector4 = int __attribute__((vector_size(16)));
+
+static function function_name(): const char*
+{
+    return __func__;
+}
+
+static function pretty_function_name(): const char*
+{
+    return __PRETTY_FUNCTION__;
+}
+
+__attribute__((noinline))
+static function classify_with_range(value: int): int
+{
+    switch (value) {
+    case 0:
+        return 0;
+    case 1 ... 5:
+        return 1;
+    case 6 ... 9:
+        return 2;
+    default:
+        return -1;
+    }
+}
+
+static function omitted_middle(value: int): int
+{
+    let fallback: int = 9;
+    return value ?: fallback;
+}
+
+static int legacy_add(a, b)
+int a;
+int b;
+{
+    return a + b;
+}
+
+static function statement_expression(value: int): int
+{
+    return ({
+        let doubled: int = value * 2;
+        doubled + 1;
+    });
+}
+
+static function computed_goto(value: int): int
+{
+    static let labels: void*[] = [&&negative, &&positive];
+
+    goto *labels[value >= 0];
+
+negative:
+    return -value;
+
+positive:
+    return value;
+}
+
+static function nested_function(value: int): int
+{
+    __label__ done;
+    function helper(candidate: int): int
+    {
+        if (candidate < 0) {
+            goto done;
+        }
+        return candidate * 2;
+    }
+
+    let result: int = helper(value);
+done:
+    return result;
+}
+
+static function zero_length_and_empty(): int
+{
+    struct zero_length {
+        length: int;
+        data: int[0];
+    };
+    let value: struct zero_length = cinit {.length = 1};
+    let empty: struct empty = {};
+    return value.length + sizeof(empty);
+}
+
+static function old_field_designator(value: int): int
+{
+    let point: struct point = cinit {.x = value};
+    return point.x;
+}
+
+static function old_and_range_designators(): int
+{
+    let value: struct range_initializer = cinit {
+        .values[0 ... 2] = 3,
+        .values[6 ... 7] = 4,
+    };
+    return value.values[0] + value.values[6];
+}
+
+static function type_builtins(value: int): int
+{
+    __auto_type copy = value;
+    let reflected: typeof(copy) = value;
+    let another: __typeof__(reflected) = reflected;
+    let selected: int = __builtin_choose_expr(
+        __builtin_types_compatible_p(typeof(copy), int),
+        another,
+        0);
+    return selected + __builtin_constant_p(value ? 1 : 1) + (__alignof__(double) > 0);
+}
+
+static function cast_to_union(value: float): int
+{
+    let result: union converted = value as union converted;
+    return result.integer;
+}
+
+static function extended_operators(value: int): int
+{
+    let wide: __int128 = (value as __int128) << 64;
+    let pointer: void* = &value;
+    let arbitrary: int = value + (pointer - pointer);
+    return arbitrary + (wide as int) + sizeof(void);
+}
+
+static function inline_assembly(value: int): int
+{
+    __asm__ volatile ("" : "+r"(value) : : "memory");
+    return value;
+}
+
+function main(): int
+{
+    __extension__ let extension_value: int = 1;
+    let selector: int = classify_with_range(4);
+    let expression: int = ({
+        let total: int = 0;
+        for (let index: int = 0; index < 4; ++index) {
+            total += index;
+        }
+        total;
+    });
+
+    GNU_LOG("counter=%d name=%s pretty=%s extension=%d\n",
+            COUNTER_VALUE, function_name(), pretty_function_name(), extension_value);
+    printf("range=%d middle=%d statement=%d goto=%d nested=%d expression=%d\n",
+           selector,
+           omitted_middle(0),
+           statement_expression(5),
+           computed_goto(-3),
+           nested_function(6),
+           expression);
+    printf("empty=%d legacy=%d field=%d designators=%d builtins=%d union=%d extended=%d asm=%d\n",
+           zero_length_and_empty(),
+           legacy_add(20, 22),
+           old_field_designator(8),
+           old_and_range_designators(),
+           type_builtins(7),
+           cast_to_union(1.0f),
+           extended_operators(2),
+           inline_assembly(3));
+    return EXIT_SUCCESS;
+}

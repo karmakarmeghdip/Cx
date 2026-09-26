@@ -1,0 +1,31 @@
+{
+    "$schema": "https://raw.githubusercontent.com/LuaLS/vscode-lua/master/setting/schema.json",
+    "runtime.version": "LuaJIT",
+    "runtime.path": [
+        "?.lua",
+        "?/init.lua",
+        "compiler/?.lua",
+        "compiler/?/init.lua"
+    ],
+    "diagnostics.enable": true,
+    "diagnostics.globals": [
+        "jit"
+    ],
+    "diagnostics.disable": [
+        "trailing-space"
+    ],
+    "diagnostics.severity": {
+        "undefined-global": "Error",
+        "unused-local": "Warning",
+        "unused-vararg": "Warning",
+        "deprecated": "Warning"
+    },
+    "workspace.checkThirdParty": false,
+    "workspace.ignoreDir": [
+        ".git",
+        "out",
+        "tests/goldens"
+    ],
+    "completion.callSnippet": "Replace",
+    "hint.enable": false
+}

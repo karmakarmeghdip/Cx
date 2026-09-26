@@ -1,0 +1,113 @@
+#include <limits.h>
+#include <stdint.h>
+#include <stdio.h>
+
+static function gcd(left: int, right: int): int
+{
+    while (right != 0) {
+        let remainder: int = left % right;
+        left = right;
+        right = remainder;
+    }
+    return left < 0 ? -left : left;
+}
+
+static function sign_name(value: int): const char*
+{
+    if (value < 0) {
+        return "negative";
+    }
+    if (value > 0) {
+        return "positive";
+    }
+    return "zero";
+}
+
+static function exercise_expressions(seed: int): void
+{
+    let value: int = seed;
+    value += 5;
+    value -= 2;
+    value *= 3;
+    value /= 2;
+    value %= 7;
+    value <<= 2;
+    value >>= 1;
+    value &= 0x3f;
+    value |= 0x10;
+    value ^= 0x01;
+
+    let before: int = value++;
+    let after: int = --value;
+    let combined: int = (value += 2, value * 3);
+
+    let mask: unsigned int = 0b1010'1010u;
+    let shifted: int = mask >> 2;
+    let complement: int = ~mask;
+    let logical: int = !value || (value > 0 && seed != 0);
+    let selected: int = value > 0 ? value : -value;
+
+    printf("%d %d %d %u %d %d %d\n",
+           before, after, combined, mask, shifted, complement, logical);
+    printf("%d %s %d\n", selected, sign_name(selected), gcd(selected, seed));
+}
+
+function main(): int
+{
+    let tiny: signed char = -12;
+    let byte: unsigned char = 250u;
+    let small: short = -1000;
+    let positive: unsigned short = 60000u;
+    let integer: int = -42;
+    let unsigned_integer: unsigned int = 42u;
+    let native_long: long = -100000L;
+    let unsigned_native_long: unsigned long = 100000UL;
+    let wide: long long = -1000000000000LL;
+    let unsigned_wide: unsigned long long = 1000000000000ULL;
+    let single: float = 1.25f;
+    let real: double = 3.141592653589793;
+    let extended: long double = 2.718281828459045L;
+    let ratio: double = (small as double) / integer;
+
+    exercise_expressions(integer);
+
+    let total: int = 0;
+    for (let i: int = 0; i < 10; ++i) {
+        if (i % 3 == 0) {
+            continue;
+        }
+        if (i == 8) {
+            break;
+        }
+        total += i;
+    }
+
+    let countdown: int = 3;
+    while (countdown > 0) {
+        total += countdown;
+        --countdown;
+    }
+
+    do {
+        total *= 2;
+    } while (total < 20);
+
+    switch (total % 3) {
+    case 0:
+        total += 100;
+        break;
+    case 1:
+        total -= 10;
+        break;
+    default:
+        total = 0;
+        break;
+    }
+
+    printf("%d %u %d %u %u %ld %lu %lld %llu\n",
+           tiny, byte, small, positive, unsigned_integer, native_long,
+           unsigned_native_long, wide, unsigned_wide);
+    printf("%.2f %.15Lf %.6f %.6f %d %d\n",
+           single, extended, real, ratio, total, INT_MAX > 0);
+    return 0;
+}
