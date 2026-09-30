@@ -1,0 +1,66 @@
+#include <stdio.h>
+
+static function test_lifo(): void
+{
+    printf("--- LIFO Order Test ---\n");
+    defer printf("1 (declared first, runs last)\n");
+    defer printf("2 (declared second, runs second)\n");
+    defer printf("3 (declared third, runs first)\n");
+    printf("inside body\n");
+}
+
+static function test_early_return(flag: int): int
+{
+    let x: int = 100;
+    defer printf("cleanup: restoring state\n");
+    if (flag > 0) {
+        defer printf("cleanup: inner branch\n");
+        return x + 5;
+    }
+    return 0;
+}
+
+static function test_loop(): void
+{
+    printf("--- Loop Scope Test ---\n");
+    for (let i: int = 0; i < 4; i = i + 1) {
+        defer printf("defer loop iteration %d\n", i);
+        if (i == 1) {
+            printf("continue at %d\n", i);
+            continue;
+        }
+        if (i == 2) {
+            printf("break at %d\n", i);
+            break;
+        }
+        printf("step %d\n", i);
+    }
+}
+
+static function test_compound(): void
+{
+    printf("--- Compound Defer Test ---\n");
+    let a: int = 10;
+    let b: int = 20;
+    defer {
+        a = a + 5;
+        b = b * 2;
+        printf("compound deferred cleanup: a=%d b=%d\n", a, b);
+    }
+    printf("work done: a=%d b=%d\n", a, b);
+}
+
+function main(): int
+{
+    test_lifo();
+
+    printf("--- Early Return Test ---\n");
+    let val: int = test_early_return(1);
+    printf("returned value = %d\n", val);
+
+    test_loop();
+    test_compound();
+
+    printf("--- Done ---\n");
+    return 0;
+}
