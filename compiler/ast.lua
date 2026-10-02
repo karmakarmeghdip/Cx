@@ -396,6 +396,11 @@ local M = {}
 ---@class ExtModulesExport: CxNode
 ---@field decl table the exported Cx declaration node
 
+-- Pipe extension kinds.
+---@class ExtPipeInfix: CxNode
+---@field left CxNode piped input expression
+---@field right CxNode target expression, optionally with slot '_'
+
 --- True when v looks like an AST node (plain table with a string kind).
 --- Loc tables and trivia entries return false.
 --- @param v any

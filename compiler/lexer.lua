@@ -66,7 +66,7 @@ M.KEYWORDS = {
 local PUNCT2 = {
     ["=="] = true, ["!="] = true, ["<="] = true, [">="] = true,
     ["&&"] = true, ["||"] = true, ["++"] = true, ["--"] = true,
-    ["->"] = true, ["=>"] = true, ["+="] = true, ["-="] = true,
+    ["->"] = true, ["=>"] = true, ["|>"] = true, ["+="] = true, ["-="] = true,
     ["*="] = true, ["/="] = true, ["%="] = true, ["&="] = true,
     ["|="] = true, ["^="] = true, ["<<"] = true, [">>"] = true,
     ["##"] = true,
