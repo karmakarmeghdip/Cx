@@ -355,4 +355,42 @@ for ek, ck in pairs(MIRRORS) do
     end
 end
 
+function M.lsp_complete(ctx)
+    return {
+        { label = "__auto_type", kind = 14, detail = "GNU auto type inference" },
+        { label = "__asm__", kind = 14, detail = "GNU inline assembly", insertText = "__asm__ volatile (${1:\"\"} : ${2:/* out */} : ${3:/* in */} : ${4:/* clobbers */});", insertTextFormat = 2 },
+        { label = "__label__", kind = 14, detail = "GNU local label declaration" },
+    }
+end
+
+function M.lsp_hover(node, ctx)
+    local k = node.kind
+    if k == "Ext:Gnu:StmtExpr" or k == "Cx:Gnu:StmtExpr" then
+        return "### GNU Statement Expression\n`({ ... })` evaluates a compound statement as an expression. The last statement yields the value."
+    elseif k == "Ext:Gnu:AsmStmt" or k == "Cx:Gnu:AsmStmt" then
+        return "### GNU Inline Assembly\n`__asm__` embeds target assembly instructions."
+    elseif k == "Ext:Gnu:LabelAddr" or k == "Cx:Gnu:LabelAddr" then
+        return "### GNU Label Address\n`&&label` takes the address of a code label for computed gotos (`void*`)."
+    elseif k == "Ext:Gnu:ComputedGoto" or k == "Cx:Gnu:ComputedGoto" then
+        return "### GNU Computed Goto\n`goto *expr;` jumps to a code address obtained via `&&label`."
+    elseif k == "Ext:Gnu:OmitMiddle" or k == "Cx:Gnu:OmitMiddle" then
+        return "### GNU Omitted Middle Ternary\n`cond ?: fallback` evaluates `cond` once and returns it if truthy, otherwise returns `fallback`."
+    end
+    return nil
+end
+
+function M.lsp_token(node)
+    local k = node.kind
+    if k == "Ext:Gnu:StmtExpr" or k == "Cx:Gnu:StmtExpr" then
+        return "keyword", {}
+    elseif k == "Ext:Gnu:AsmStmt" or k == "Cx:Gnu:AsmStmt" then
+        return "keyword", {}
+    elseif k == "Ext:Gnu:LabelAddr" or k == "Cx:Gnu:LabelAddr" or k == "Ext:Gnu:ComputedGoto" or k == "Cx:Gnu:ComputedGoto" then
+        return "label", {}
+    elseif k == "Ext:Gnu:NestedFunc" or k == "Cx:Gnu:NestedFunc" then
+        return "function", { "declaration" }
+    end
+    return "keyword", {}
+end
+
 return M

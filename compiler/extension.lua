@@ -3,6 +3,12 @@
 -- never replace the lexer and never silently change core C23 semantics.
 -- Assembly copies the base grammar tables, so the strict grammar object is
 -- never mutated by dialect registration (regression-tested).
+--
+-- Optional LSP hooks:
+--   mod.lsp_token(node) -> token_type, modifiers (semantic tokens)
+--   mod.lsp_complete(ctx) -> table[] items (autocomplete & snippets)
+--   mod.lsp_hover(node, ctx) -> string markdown (hover documentation & lowering)
+--   mod.lsp_inlay_hints(doc, ctx) -> table[] hints (type & param inlay hints)
 
 local M = {}
 
@@ -14,6 +20,10 @@ local M = {}
 --- extensions): classifiers over whole TUs, linked by compiler/modules.lua
 --- via CxCompiler:program. May be present with empty expanders when all
 --- rewriting happens at graph scope (e.g. modules).
+---@field lsp_token fun(node: table): string, string[]|nil optional semantic token mapping
+---@field lsp_complete fun(ctx: table): table[]|nil optional LSP completion hook
+---@field lsp_hover fun(node: table, ctx: table): string|nil optional LSP hover hook
+---@field lsp_inlay_hints fun(doc: table, ctx: table): table[]|nil optional LSP inlay hints hook
 
 ---@class CxGraphApi
 ---@field imports_of fun(root: table): table[] top-level import edges
@@ -45,6 +55,22 @@ function M.validate(name, mod)
             "extension '" .. name .. "': graph_api.imports_of must be a function")
         assert(type(mod.graph_api.exports_of) == "function",
             "extension '" .. name .. "': graph_api.exports_of must be a function")
+    end
+    if mod.lsp_token ~= nil then
+        assert(type(mod.lsp_token) == "function",
+            "extension '" .. name .. "': lsp_token must be a function")
+    end
+    if mod.lsp_complete ~= nil then
+        assert(type(mod.lsp_complete) == "function",
+            "extension '" .. name .. "': lsp_complete must be a function")
+    end
+    if mod.lsp_hover ~= nil then
+        assert(type(mod.lsp_hover) == "function",
+            "extension '" .. name .. "': lsp_hover must be a function")
+    end
+    if mod.lsp_inlay_hints ~= nil then
+        assert(type(mod.lsp_inlay_hints) == "function",
+            "extension '" .. name .. "': lsp_inlay_hints must be a function")
     end
 end
 

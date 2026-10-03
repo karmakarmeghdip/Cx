@@ -1,0 +1,11 @@
+# editors/kakoune/kakrc — Self-contained Kakoune configuration for Cx testing
+# Usage: kak -s test -ui dummy -e 'source editors/kakoune/kakrc' samples/programs/01_hello_args.cx
+
+evaluate-commands %sh{
+    DIR="$(pwd)/editors/kakoune"
+    printf 'source "%s/cx.kak"\n' "$DIR"
+    if command -v kak-lsp >/dev/null 2>&1; then
+        kak-lsp --kakoune -s "$kak_session"
+    fi
+    printf 'source "%s/cx-lsp.kak"\n' "$DIR"
+}

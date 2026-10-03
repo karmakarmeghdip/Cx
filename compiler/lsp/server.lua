@@ -141,7 +141,7 @@ end
 --- @param col integer 1-based byte column
 --- @return table[] items
 function M.complete_items(self, uri, doc, cfg, line, col)
-    local items = query.complete(doc, line, col, cfg.entries)
+    local items = query.complete(doc, line, col, cfg.entries, { snippet_support = self.snippet_support })
     local index = M.graph_for(self, uri, doc, cfg)
     if index.api == nil then
         return items
@@ -310,6 +310,11 @@ function M.handle(self, msg)
         else
             self.encoding = "utf-8"
         end
+        local caps = (params and params.capabilities) or {}
+        local tdoc = caps.textDocument or {}
+        local comp = tdoc.completion or {}
+        local comp_item = comp.completionItem or {}
+        self.snippet_support = (comp_item.snippetSupport == true)
         return result({
             capabilities = {
                 textDocumentSync = 1,
@@ -319,9 +324,17 @@ function M.handle(self, msg)
                     full = true,
                     range = true,
                 },
-                completionProvider = { triggerCharacters = { ".", ":", ">" } },
+                completionProvider = {
+                    triggerCharacters = { ".", ":", ">", "(", "," },
+                },
                 hoverProvider = true,
                 definitionProvider = true,
+                signatureHelpProvider = {
+                    triggerCharacters = { "(", "," },
+                    retriggerCharacters = { "," },
+                },
+                inlayHintProvider = true,
+                documentSymbolProvider = true,
             },
             serverInfo = { name = "cx-lsp", version = "0.0.0-p0" },
         })
@@ -435,7 +448,8 @@ function M.handle(self, msg)
         local pos = params.position or { line = 0, character = 0 }
         local line, col = positions.position_to_loc(
             doc.text, doc.starts, pos, self.encoding)
-        local text = query.hover(doc, line, col)
+        local cfg = M.config_for_uri(self, uri)
+        local text = query.hover(doc, line, col, cfg.entries)
         if text == nil then
             return result(json.null)
         end
@@ -457,6 +471,44 @@ function M.handle(self, msg)
             return result(json.null)
         end
         return result(found)
+    end
+    if method == "textDocument/signatureHelp" then
+        local params = msg.params or {}
+        local uri = (params.textDocument or {}).uri
+        local doc = (type(uri) == "string") and docs.get(self.store, uri) or nil
+        if doc == nil then
+            return err(-32602, "signatureHelp: unknown document")
+        end
+        local pos = params.position or { line = 0, character = 0 }
+        local line, col = positions.position_to_loc(
+            doc.text, doc.starts, pos, self.encoding)
+        local cfg = M.config_for_uri(self, uri)
+        local sig = query.signature_help(doc, line, col, cfg.entries)
+        if sig == nil then
+            return result(json.null)
+        end
+        return result(sig)
+    end
+    if method == "textDocument/inlayHint" then
+        local params = msg.params or {}
+        local uri = (params.textDocument or {}).uri
+        local doc = (type(uri) == "string") and docs.get(self.store, uri) or nil
+        if doc == nil then
+            return err(-32602, "inlayHint: unknown document")
+        end
+        local cfg = M.config_for_uri(self, uri)
+        local hints = query.inlay_hints(doc, params.range, cfg.entries, self.encoding)
+        return result(hints or {})
+    end
+    if method == "textDocument/documentSymbol" then
+        local params = msg.params or {}
+        local uri = (params.textDocument or {}).uri
+        local doc = (type(uri) == "string") and docs.get(self.store, uri) or nil
+        if doc == nil then
+            return err(-32602, "documentSymbol: unknown document")
+        end
+        local syms = query.document_symbols(doc, self.encoding)
+        return result(syms or {})
     end
     if method ~= nil and method:sub(1, 2) == "$/" then
         return {}

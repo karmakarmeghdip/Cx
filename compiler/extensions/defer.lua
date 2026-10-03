@@ -412,4 +412,44 @@ M.expanders = {
     end,
 }
 
+function M.lsp_complete(ctx)
+    if ctx.prefix:match(":[sw_]*$") or ctx.prefix:match("[.:>][sw_]*$") then
+        return nil
+    end
+    return {
+        {
+            label = "defer",
+            kind = 14,
+            detail = "LIFO scope cleanup",
+            insertText = "defer ${1:cleanup()};",
+            insertTextFormat = 2,
+        },
+        {
+            label = "defer { ... }",
+            kind = 15,
+            detail = "LIFO scope cleanup block",
+            insertText = "defer {\n\t${1:/* cleanup */}\n}",
+            insertTextFormat = 2,
+        },
+    }
+end
+
+function M.lsp_hover(node, ctx)
+    local k = node.kind
+    if k == "Cx:Defer:Item" or k == "Ext:Defer:Func" then
+        return "### Defer Statement\nExecutes cleanup statement in LIFO order upon exiting the enclosing lexical block, loop iteration, or function."
+    end
+    return nil
+end
+
+function M.lsp_token(node)
+    local k = node.kind
+    if k == "Cx:Defer:Item" then
+        return "keyword", {}
+    elseif k == "Ext:Defer:Func" then
+        return "function", {}
+    end
+    return "keyword", {}
+end
+
 return M

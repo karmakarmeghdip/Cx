@@ -149,4 +149,24 @@ function M.extend_grammar(G, env)
     }
 end
 
+function M.lsp_hover(node, ctx)
+    local k = node.kind
+    if k == "Ext:Pipe:Infix" then
+        return "### Pipeline Operator (`|>`);\nThreads the left-hand expression into the right-hand function call as the first argument, or replaces the `_` placeholder."
+    elseif k == "Ext:Pipe:Slot" then
+        return "### Pipe Placeholder (`_`)\nRepresents the piped left-hand expression in the target call."
+    end
+    return nil
+end
+
+function M.lsp_token(node)
+    local k = node.kind
+    if k == "Ext:Pipe:Infix" then
+        return "operator", {}
+    elseif k == "Ext:Pipe:Slot" then
+        return "variable", {}
+    end
+    return "operator", {}
+end
+
 return M

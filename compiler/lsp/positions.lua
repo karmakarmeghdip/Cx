@@ -61,6 +61,20 @@ function M.byte_col_to_char(line_text, byte_col, encoding)
     return #prefix
 end
 
+--- Convert a byte length starting at byte_col to an LSP character length.
+--- @param line_text string source line bytes (no newline)
+--- @param byte_col integer 1-based byte column
+--- @param byte_len integer length in bytes
+--- @param encoding string "utf-8"|"utf-16"
+--- @return integer char_len length in characters
+function M.byte_len_to_char(line_text, byte_col, byte_len, encoding)
+    if encoding == "utf-16" then
+        local sub = line_text:sub(byte_col, byte_col + byte_len - 1)
+        return M.utf16_len(sub)
+    end
+    return byte_len
+end
+
 --- Convert a 0-based LSP character back to a 1-based byte column.
 --- @param line_text string source line bytes (no newline)
 --- @param char integer 0-based LSP character

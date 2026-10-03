@@ -162,6 +162,9 @@ end
 --- @return CxImportEdge[]
 local function imports_of(root)
     local out = {}
+    if root == nil or type(root.body) ~= "table" then
+        return out
+    end
     for _, node in ipairs(root.body) do
         if node.kind == "Ext:Modules:Import" then
             out[#out + 1] = {
@@ -181,6 +184,9 @@ end
 --- @return table<string, CxExportEntry>
 local function exports_of(root, path)
     local exports = {}
+    if root == nil or type(root.body) ~= "table" then
+        return exports
+    end
     for _, node in ipairs(root.body) do
         if node.kind == "Ext:Modules:Export" then
             local decl = node.decl

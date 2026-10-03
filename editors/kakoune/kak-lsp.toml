@@ -1,0 +1,13 @@
+# kak-lsp.toml configuration snippet for Cx language server
+# Place this in ~/.config/kak-lsp/kak-lsp.toml or include it.
+
+[language_server.cx]
+filetypes = ["cx"]
+roots = ["build.lua", ".git"]
+command = "cx-lsp"
+# If cx-lsp is not on PATH, specify the absolute path or luajit runner:
+# command = "luajit"
+# args = ["/path/to/Cx/compiler/lsp/main.lua"]
+
+[language_server.cx.settings]
+# Server-specific settings (if needed)
